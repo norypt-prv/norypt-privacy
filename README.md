@@ -106,61 +106,46 @@ opkg update
 opkg install uqmi bash coreutils-shuf
 ```
 
-**Option B — Offline (no internet on router):**
+**Option B — Offline pre-built package (recommended, no internet needed):**
 
-The GL-XE3000 uses architecture `aarch64_cortex-a53`. Download the following `.ipk` files on a PC with internet access, then copy them to the router.
+The `offline/` folder in this repository contains all required `.ipk` files and an automated installer. All dependencies are already bundled — no internet required on the router.
 
-**Download on your PC** from the OpenWrt package repository:
-
-Go to `https://openwrt.org/packages/pkgdata/` and search for each package, selecting architecture `aarch64_cortex-a53`. Or use the direct index for your firmware version:
-
-```
-https://downloads.openwrt.org/releases/<version>/packages/aarch64_cortex-a53/
-```
-
-Replace `<version>` with the OpenWrt base version your GL-iNet firmware uses (e.g. `23.05.3`). You can check it on the router with:
+**On your PC**, clone the repo and copy the entire folder to the router:
 
 ```sh
-cat /etc/openwrt_release | grep DISTRIB_RELEASE
+git clone https://github.com/dartonverhovan-ctrl/norypt-privacy.git
+scp -r norypt-privacy root@192.168.8.1:/tmp/norypt-privacy
 ```
 
-**Packages to download** (get the latest version of each):
-
-| Package | Feed |
-|---------|------|
-| `uqmi_*.ipk` | `base` |
-| `bash_*.ipk` | `base` |
-| `coreutils-shuf_*.ipk` | `base` |
-
-Also download any missing dependencies for each package. `opkg` will tell you what is missing when you install.
-
-**Copy the .ipk files to the router:**
-
-```sh
-scp uqmi_*.ipk bash_*.ipk coreutils-shuf_*.ipk root@192.168.8.1:/tmp/
-```
-
-**SSH in and install:**
+**SSH into the router and run the offline installer:**
 
 ```sh
 ssh root@192.168.8.1
-cd /tmp
-opkg install --force-reinstall uqmi_*.ipk bash_*.ipk coreutils-shuf_*.ipk
+sh /tmp/norypt-privacy/offline/install-offline.sh
 ```
 
-If opkg reports missing dependencies, download and install those `.ipk` files the same way first.
+The offline installer will:
+1. Install all bundled `.ipk` dependencies from `offline/deps/` in the correct order
+2. Copy all modules, databases, web panel, and service files
+3. Enable and start the service
+4. Configure the uhttpd redirect for the web panel
+5. Set up sysupgrade persistence
 
-**Alternative — download directly on the router using a USB drive or tethered phone:**
+**Bundled packages** (pre-downloaded for OpenWrt 23.05.3 / `aarch64_cortex-a53`):
 
-If you have brief internet access (even via phone USB tethering), you can use `opkg download` to save the packages without installing them yet:
+| Package | Version |
+|---------|---------|
+| `uqmi` | 2022-10-20 |
+| `bash` | 5.2.15-1 |
+| `coreutils-shuf` | 9.3-1 |
+| `coreutils` | 9.3-1 |
+| `libncurses6` | 6.4-2 |
+| `libreadline8` | 8.2-1 |
+| `libubox20230523` | 2023-05-23 |
+| `libblobmsg-json20230523` | 2023-05-23 |
+| `wwan` | 2019-04-29 |
 
-```sh
-mkdir -p /tmp/norypt-deps
-cd /tmp/norypt-deps
-opkg update
-opkg download uqmi bash coreutils-shuf
-# Copy /tmp/norypt-deps/*.ipk to a USB drive for later offline installs
-```
+> If you are on a different firmware version, the packages in `offline/deps/` may conflict. Use Option A (online) or download matching `.ipk` files manually from `https://downloads.openwrt.org/releases/`.
 
 **Step 5:** Enable and start the service:
 
