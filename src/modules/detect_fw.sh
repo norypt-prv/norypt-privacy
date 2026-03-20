@@ -41,6 +41,25 @@ _resolve_wifi_5g() {
 IF_WIFI_2G="${IF_WIFI_2G_OVERRIDE:-$(_resolve_wifi_2g)}"
 IF_WIFI_5G="${IF_WIFI_5G_OVERRIDE:-$(_resolve_wifi_5g)}"
 
+_resolve_uci_wifi_2g() {
+  # GL-iNet 4.x MediaTek: wifi2g  |  vanilla OpenWrt: default_radio0 / radio0
+  for s in wifi2g default_radio0 radio0; do
+    uci -q get "wireless.${s}" >/dev/null 2>&1 && echo "${s}" && return
+  done
+  echo "radio0"
+}
+
+_resolve_uci_wifi_5g() {
+  # GL-iNet 4.x MediaTek: wifi5g  |  vanilla OpenWrt: default_radio1 / radio1
+  for s in wifi5g default_radio1 radio1; do
+    uci -q get "wireless.${s}" >/dev/null 2>&1 && echo "${s}" && return
+  done
+  echo "radio1"
+}
+
+UCI_WIFI_2G="${UCI_WIFI_2G_OVERRIDE:-$(_resolve_uci_wifi_2g)}"
+UCI_WIFI_5G="${UCI_WIFI_5G_OVERRIDE:-$(_resolve_uci_wifi_5g)}"
+
 _resolve_modem_port() {
   # PCIe MHI modem (GL-XE3000 built-in Quectel EM060K) exposes AT via mhi_DUN
   for port in /dev/mhi_DUN /dev/ttyUSB2 /dev/ttyUSB1 /dev/ttyUSB0 /dev/ttyUSB3; do
@@ -50,4 +69,4 @@ _resolve_modem_port() {
 }
 MODEM_PORT="${MODEM_PORT_OVERRIDE:-$(_resolve_modem_port)}"
 
-export FW_VERSION IF_WAN IF_WIFI_2G IF_WIFI_5G IF_WWAN IF_CDC MODEM_PORT
+export FW_VERSION IF_WAN IF_WIFI_2G IF_WIFI_5G IF_WWAN IF_CDC MODEM_PORT UCI_WIFI_2G UCI_WIFI_5G

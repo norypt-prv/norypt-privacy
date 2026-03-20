@@ -26,14 +26,14 @@ main() {
   local mac_2g mac_5g
   mac_2g=$(random_mac_from_db "${WIFI_DB}")
   mac_5g=$(random_mac_from_db "${WIFI_DB}")
-  _apply_mac "${IF_WIFI_2G}" "${mac_2g}" "radio0"
-  _apply_mac "${IF_WIFI_5G}" "${mac_5g}" "radio1"
+  _apply_mac "${IF_WIFI_2G}" "${mac_2g}" "${UCI_WIFI_2G}"
+  _apply_mac "${IF_WIFI_5G}" "${mac_5g}" "${UCI_WIFI_5G}"
   uci commit wireless
   # wifi reload is insufficient for MAC changes — must do full down/up
   # wifi down may return non-zero if interfaces are not yet up at boot
   wifi down || true
   wifi up
-  _log "wlan0=${mac_2g} wlan1=${mac_5g}"
+  _log "${IF_WIFI_2G}=${mac_2g} ${IF_WIFI_5G}=${mac_5g}"
 }
 
 main "$@"
