@@ -1,0 +1,17 @@
+#!/bin/sh
+# Re-apply randomized WAN MAC whenever the WAN interface comes up.
+# netifd / GL-iNet daemons can reset the kernel MAC on interface restart;
+# this hotplug script ensures the stored random MAC is always re-applied.
+
+[ "${ACTION}" = "ifup" ] || exit 0
+[ "${INTERFACE}" = "wan" ] || exit 0
+
+STORED=$(uci -q get network.wan.macaddr 2>/dev/null)
+[ -n "${STORED}" ] || exit 0
+
+DEV=$(uci -q get network.wan.device 2>/dev/null \
+      || uci -q get network.wan.ifname 2>/dev/null \
+      || echo "eth0")
+
+ip link set dev "${DEV}" address "${STORED}" 2>/dev/null || true
+logger -t norypt "wan hotplug: re-applied MAC ${STORED} on ${DEV}"

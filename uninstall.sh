@@ -10,6 +10,7 @@ echo "Removing files..."
 rm -rf /etc/norypt /www/norypt
 rm -f  /etc/init.d/norypt /usr/bin/norypt /www/cgi-bin/norypt.cgi
 rm -f  /etc/config/norypt /etc/uci-defaults/99-norypt
+rm -f  /etc/hotplug.d/iface/99-norypt-wan
 
 echo "Removing web server config..."
 # uhttpd redirect

@@ -54,6 +54,8 @@ get "src/init.d/norypt"          /etc/init.d/norypt            755
 get "src/uci-defaults/99-norypt" /etc/uci-defaults/99-norypt   755
 get "src/bin/norypt"             /usr/bin/norypt                755
 get "src/cgi-bin/norypt.cgi"    "${CGI}/norypt.cgi"              755
+mkdir -p /etc/hotplug.d/iface
+get "src/hotplug.d/99-norypt-wan" /etc/hotplug.d/iface/99-norypt-wan 755
 
 echo "Installing web panel..."
 for f in index.html style.css app.js; do
@@ -118,6 +120,7 @@ if ! grep -q '/etc/norypt/' /etc/sysupgrade.conf 2>/dev/null; then
 /www/cgi-bin/norypt.cgi
 /www/norypt/
 /etc/nginx/gl-conf.d/norypt.conf
+/etc/hotplug.d/iface/99-norypt-wan
 EOF
 fi
 
