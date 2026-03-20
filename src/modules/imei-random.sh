@@ -31,7 +31,9 @@ _at() {
     send_at "${MODEM_PORT}" "${cmd}"
   elif ubus list AT >/dev/null 2>&1; then
     # GL-iNet firmware: route through modem_AT ubus daemon to avoid port contention
-    ubus call AT get_result "{\"cmd\":\"AT${cmd}\",\"timeout\":5000}" 2>/dev/null
+    # Escape inner quotes so cmd with "quoted args" produces valid JSON
+    local escaped="${cmd//\"/\\\"}"
+    ubus call AT get_result "{\"cmd\":\"AT${escaped}\",\"timeout\":5000}" 2>/dev/null
   else
     # Fallback: direct serial (vanilla OpenWrt without modem_AT daemon)
     stty -F "${MODEM_PORT}" 115200 raw -echo 2>/dev/null || true
