@@ -68,8 +68,9 @@ echo "Enabling service..."
 /etc/init.d/norypt enable
 /etc/init.d/norypt start
 
-echo "Configuring uhttpd redirect for CSRF-injected panel..."
+echo "Configuring web server for panel..."
 if uci show uhttpd >/dev/null 2>&1; then
+  # uhttpd (vanilla OpenWrt / older GL-iNet firmware)
   if ! uci show uhttpd 2>/dev/null | grep -q "norypt_redirect"; then
     uci add uhttpd redirect > /dev/null
     uci set uhttpd.@redirect[-1].name='norypt_redirect'
@@ -78,6 +79,35 @@ if uci show uhttpd >/dev/null 2>&1; then
     uci commit uhttpd
   fi
   /etc/init.d/uhttpd restart 2>/dev/null || true
+elif command -v nginx >/dev/null 2>&1; then
+  # GL-iNet firmware 4.x nginx: location blocks live in gl-conf.d (inside the server{} in gl.conf)
+  # Vanilla OpenWrt does not ship nginx, so this branch is GL-iNet only.
+  mkdir -p /etc/nginx/gl-conf.d
+  cat > /etc/nginx/gl-conf.d/norypt.conf << 'NGINX_EOF'
+# Serve the index through CGI so __CSRF_TOKEN__ is injected before delivery
+location = /norypt/ {
+    access_by_lua_file /usr/share/gl-ngx/oui-access.lua;
+    add_header X-Frame-Options DENY;
+    include fastcgi_params;
+    fastcgi_param SCRIPT_FILENAME /www/cgi-bin/norypt.cgi;
+    fastcgi_param QUERY_STRING action=serve_index;
+    fastcgi_read_timeout 300;
+    fastcgi_pass unix:/var/run/fcgiwrap.socket;
+}
+# Static assets (style.css, app.js) served directly
+location /norypt/ {
+    root /www;
+    access_by_lua_file /usr/share/gl-ngx/oui-access.lua;
+    add_header X-Frame-Options DENY;
+}
+NGINX_EOF
+  nginx -t && nginx -s reload 2>/dev/null || /etc/init.d/nginx restart 2>/dev/null || true
+  if [ ! -S /var/run/fcgiwrap.socket ]; then
+    echo "WARNING: fcgiwrap not running — panel will load but API actions will fail."
+    echo "         Fix: opkg install fcgiwrap && /etc/init.d/fcgiwrap enable && /etc/init.d/fcgiwrap start"
+  fi
+else
+  echo "WARNING: No supported web server found (uhttpd/nginx). Panel may not be accessible."
 fi
 
 echo "Setting up sysupgrade persistence..."
@@ -90,6 +120,7 @@ if ! grep -q '/etc/norypt/' /etc/sysupgrade.conf 2>/dev/null; then
 /usr/bin/norypt
 /www/cgi-bin/norypt.cgi
 /www/norypt/
+/etc/nginx/gl-conf.d/norypt.conf
 EOF
 fi
 
