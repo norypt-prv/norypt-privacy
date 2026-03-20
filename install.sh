@@ -84,17 +84,14 @@ elif command -v nginx >/dev/null 2>&1; then
   # Vanilla OpenWrt does not ship nginx, so this branch is GL-iNet only.
   mkdir -p /etc/nginx/gl-conf.d
   cat > /etc/nginx/gl-conf.d/norypt.conf << 'NGINX_EOF'
-# Serve the index through CGI so __CSRF_TOKEN__ is injected before delivery
+# Rewrite index into the existing /cgi-bin/ location so __CSRF_TOKEN__ is injected.
+# The trailing ? prevents nginx from appending the original query string.
 location = /norypt/ {
     access_by_lua_file /usr/share/gl-ngx/oui-access.lua;
     add_header X-Frame-Options DENY;
-    include fastcgi_params;
-    fastcgi_param SCRIPT_FILENAME /www/cgi-bin/norypt.cgi;
-    fastcgi_param QUERY_STRING action=serve_index;
-    fastcgi_read_timeout 300;
-    fastcgi_pass unix:/var/run/fcgiwrap.socket;
+    rewrite ^ /cgi-bin/norypt.cgi?action=serve_index? last;
 }
-# Static assets (style.css, app.js) served directly
+# Static assets (style.css, app.js) served directly from /www/norypt/
 location /norypt/ {
     root /www;
     access_by_lua_file /usr/share/gl-ngx/oui-access.lua;
