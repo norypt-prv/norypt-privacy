@@ -24,18 +24,9 @@ EOF
 }
 
 _read_imei() {
-  local port="${MODEM_PORT:-}"
-  [[ -z "${port}" ]] && { echo "unavailable"; return; }
-  [[ -e "${port}" ]] || { echo "unavailable"; return; }
-  stty -F "${port}" 115200 raw -echo 2>/dev/null || true
-  # Drain any buffered responses from GL-iNet's modem manager
-  timeout 1 head -c 512 "${port}" 2>/dev/null || true
-  # Query IMEI
-  printf 'AT+EGMR=0,7\r' > "${port}"
-  sleep 0.4
-  local resp
-  resp=$(timeout 1 head -c 128 "${port}" 2>/dev/null || true)
-  echo "${resp}" | grep -oE '[0-9]{15}' | head -1 || echo "unavailable"
+  # Use GL-iNet's modem AT ubus daemon (avoids port contention with modem_AT)
+  ubus call AT get_result '{"cmd":"AT+EGMR=0,7","timeout":3000}' 2>/dev/null \
+    | grep -oE '[0-9]{15}' | head -1 || echo "unavailable"
 }
 
 cmd_status() {
