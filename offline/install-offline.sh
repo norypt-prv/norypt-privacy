@@ -97,6 +97,9 @@ cp "${SRC}/bin/norypt"             /usr/bin/norypt
 chmod 755 /usr/bin/norypt
 cp "${SRC}/cgi-bin/norypt.cgi"     "${CGI}/norypt.cgi"
 chmod 755 "${CGI}/norypt.cgi"
+mkdir -p /etc/hotplug.d/iface
+cp "${SRC}/hotplug.d/99-norypt-wan" /etc/hotplug.d/iface/99-norypt-wan
+chmod 755 /etc/hotplug.d/iface/99-norypt-wan
 
 if [ ! -f /etc/config/norypt ]; then
   cp "${SRC}/config/norypt" /etc/config/norypt
@@ -123,6 +126,7 @@ echo "[5/5] Enabling service and configuring router..."
 /etc/init.d/norypt start
 
 if uci show uhttpd >/dev/null 2>&1; then
+  # uhttpd (vanilla OpenWrt / older GL-iNet firmware)
   if ! uci show uhttpd 2>/dev/null | grep -q "norypt_redirect"; then
     uci add uhttpd redirect > /dev/null
     uci set uhttpd.@redirect[-1].name='norypt_redirect'
@@ -131,6 +135,22 @@ if uci show uhttpd >/dev/null 2>&1; then
     uci commit uhttpd
   fi
   /etc/init.d/uhttpd restart 2>/dev/null || true
+elif command -v nginx >/dev/null 2>&1; then
+  # GL-iNet firmware 4.x nginx — drop a server block include
+  mkdir -p /etc/nginx/gl-conf.d
+  cat > /etc/nginx/gl-conf.d/norypt.conf << 'NGINX_EOF'
+location = /norypt/ {
+    access_by_lua_file /usr/share/gl-ngx/oui-access.lua;
+    add_header X-Frame-Options DENY;
+    rewrite ^ /cgi-bin/norypt.cgi?action=serve_index? last;
+}
+location /norypt/ {
+    root /www;
+    access_by_lua_file /usr/share/gl-ngx/oui-access.lua;
+    add_header X-Frame-Options DENY;
+}
+NGINX_EOF
+  nginx -t && nginx -s reload 2>/dev/null || /etc/init.d/nginx restart 2>/dev/null || true
 fi
 
 if ! grep -q '/etc/norypt/' /etc/sysupgrade.conf 2>/dev/null; then
@@ -139,9 +159,11 @@ if ! grep -q '/etc/norypt/' /etc/sysupgrade.conf 2>/dev/null; then
 /etc/config/norypt
 /etc/init.d/norypt
 /etc/uci-defaults/99-norypt
+/etc/hotplug.d/iface/99-norypt-wan
 /usr/bin/norypt
 /www/cgi-bin/norypt.cgi
 /www/norypt/
+/etc/nginx/gl-conf.d/norypt.conf
 EOF
 fi
 

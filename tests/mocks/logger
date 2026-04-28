@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-echo "mock logger: $*" >> /tmp/norypt_mock_logger

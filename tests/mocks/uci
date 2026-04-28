@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-echo "mock uci: $*" >> /tmp/norypt_mock_uci_calls

@@ -64,6 +64,16 @@ async function loadStatus() {
   }
 }
 
+async function loadConfig() {
+  try {
+    const cfg = parseKV(await api('get_config'));
+    document.querySelectorAll('[data-cfg]').forEach(toggle => {
+      const v = cfg[toggle.dataset.cfg];
+      if (v === '1' || v === '0') toggle.checked = v === '1';
+    });
+  } catch (e) { /* keep default-checked state on failure */ }
+}
+
 async function loadHistory() {
   const container = document.getElementById('history-list');
   if (!container) return;
@@ -132,6 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initCsrf();
   bindControls();
   loadStatus();
+  loadConfig();
   loadHistory();
   setInterval(loadStatus, 30000);
 });

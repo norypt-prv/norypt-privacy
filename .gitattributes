@@ -1,0 +1,23 @@
+# Enforce LF for all shell, CGI, web, and config files — these run on
+# OpenWrt/Linux and break with CRLF.
+*.sh        text eol=lf
+*.cgi       text eol=lf
+*.bash      text eol=lf
+*.js        text eol=lf
+*.css       text eol=lf
+*.html      text eol=lf
+*.md        text eol=lf
+*.db        text eol=lf
+*.conf      text eol=lf
+Makefile    text eol=lf
+
+# Files without an extension that must stay LF on disk
+src/bin/norypt              text eol=lf
+src/init.d/norypt           text eol=lf
+src/uci-defaults/99-norypt  text eol=lf
+src/hotplug.d/99-norypt-wan text eol=lf
+src/config/norypt           text eol=lf
+
+# Binaries
+*.png  binary
+*.ipk  binary

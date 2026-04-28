@@ -69,9 +69,7 @@ main() {
     return 0
   fi
 
-  _wait_for_modem
-  local modem_ok=$?
-  if [[ "${modem_ok}" -ne 0 ]]; then return 1; fi
+  if ! _wait_for_modem; then return 1; fi
 
   _at '+QCFG="IMEI/LOCK",0' >/dev/null
 

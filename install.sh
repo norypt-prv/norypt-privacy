@@ -101,9 +101,14 @@ location /norypt/ {
 }
 NGINX_EOF
   nginx -t && nginx -s reload 2>/dev/null || /etc/init.d/nginx restart 2>/dev/null || true
+  # Panel actions are CGI; nginx routes them through fcgiwrap. Install if missing.
   if [ ! -S /var/run/fcgiwrap.socket ]; then
-    echo "WARNING: fcgiwrap not running — panel will load but API actions will fail."
-    echo "         Fix: opkg install fcgiwrap && /etc/init.d/fcgiwrap enable && /etc/init.d/fcgiwrap start"
+    if ! opkg list-installed 2>/dev/null | grep -q '^fcgiwrap '; then
+      echo "Installing fcgiwrap (required for panel API on nginx)..."
+      _opkg_install fcgiwrap
+    fi
+    /etc/init.d/fcgiwrap enable 2>/dev/null || true
+    /etc/init.d/fcgiwrap start  2>/dev/null || true
   fi
 else
   echo "WARNING: No supported web server found (uhttpd/nginx). Panel may not be accessible."

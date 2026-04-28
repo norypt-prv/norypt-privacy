@@ -69,11 +69,14 @@ cmd_config() {
   case "${1:-show}" in
     show) uci show "${CONFIG}" ;;
     set)
-      local val="$3"
+      local key="${2:-}" val="${3:-}"
+      if [[ -z "${key}" ]] || [[ -z "${val}" ]]; then
+        echo "Usage: norypt config set <key> <on|off|value>"; exit 1
+      fi
       [[ "${val}" = "on" ]]  && val=1
       [[ "${val}" = "off" ]] && val=0
-      _cfg_set "$2" "${val}"
-      echo "Set $2=${val}"
+      _cfg_set "${key}" "${val}"
+      echo "Set ${key}=${val}"
       ;;
     *) echo "Usage: norypt config show|set <key> <on|off>"; exit 1 ;;
   esac

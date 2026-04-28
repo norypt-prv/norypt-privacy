@@ -57,6 +57,10 @@ define Package/norypt-privacy/install
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/src/db/oui-wifi.db        $(1)/etc/norypt/
 	$(INSTALL_DATA) $(PKG_BUILD_DIR)/src/db/oui-wan.db         $(1)/etc/norypt/
 
+	$(INSTALL_DIR) $(1)/etc/hotplug.d/iface
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/hotplug.d/99-norypt-wan \
+	               $(1)/etc/hotplug.d/iface/99-norypt-wan
+
 	$(INSTALL_DIR) $(1)/usr/bin
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/src/bin/norypt \
 	               $(1)/usr/bin/norypt
@@ -82,6 +86,7 @@ grep -q '/etc/norypt/' /etc/sysupgrade.conf 2>/dev/null || cat >> /etc/sysupgrad
 /etc/config/norypt
 /etc/init.d/norypt
 /etc/uci-defaults/99-norypt
+/etc/hotplug.d/iface/99-norypt-wan
 /usr/bin/norypt
 /www/cgi-bin/norypt.cgi
 /www/norypt/

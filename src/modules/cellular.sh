@@ -27,7 +27,7 @@ main() {
   if [[ -z "${NORYPT_TEST:-}" ]]; then sleep 2; fi
   ifup wwan
   if [[ -z "${NORYPT_TEST:-}" ]]; then
-    _wait_for_ip; true
+    _wait_for_ip || true
   fi
   _log "cellular reconnect complete"
 }

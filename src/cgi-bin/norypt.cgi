@@ -12,18 +12,24 @@ _403() {
   exit 0
 }
 
+_session_key() {
+  # Prefer GL-iNet sysauth cookie; fall back to REMOTE_ADDR so unauthenticated
+  # LAN clients still get a per-client (not shared) token file.
+  local sid
+  sid=$(echo "${HTTP_COOKIE:-}" | grep -oE 'sysauth=[^;]+' | cut -d= -f2 | tr -dc 'a-zA-Z0-9' || true)
+  [[ -z "${sid}" ]] && sid=$(echo "${REMOTE_ADDR:-anon}" | tr -dc 'a-zA-Z0-9.:_-')
+  echo "${sid:-anon}"
+}
+
 _check_csrf() {
   local provided="${HTTP_X_NORYPT_TOKEN:-}"
   if [[ -n "${NORYPT_TEST:-}" ]]; then
     [[ "${provided}" = "${NORYPT_CSRF_TOKEN:-}" ]] || _403
     return
   fi
-  local session_id
-  # Extract sysauth cookie value for token file lookup
-  session_id=$(echo "${HTTP_COOKIE:-}" | grep -oE 'sysauth=[^;]+' | cut -d= -f2 | tr -dc 'a-zA-Z0-9' || true)
-  local token_file="/tmp/norypt_csrf_${session_id}"
+  local token_file="/tmp/norypt_csrf_$(_session_key)"
   local stored=""
-  if [[ -f "${token_file}" ]]; then stored=$(cat "${token_file}"); fi
+  [[ -f "${token_file}" ]] && stored=$(cat "${token_file}")
   if [[ -n "${stored}" ]] && [[ "${provided}" = "${stored}" ]]; then
     return
   fi
@@ -59,12 +65,12 @@ _log_event() {
 }
 
 _serve_index() {
-  local session_id token_file token html
-  session_id=$(echo "${HTTP_COOKIE:-}" | grep -oE 'sysauth=[^;]+' | cut -d= -f2 | tr -dc 'a-zA-Z0-9' || true)
-  token_file="/tmp/norypt_csrf_${session_id}"
+  local token_file token html
+  token_file="/tmp/norypt_csrf_$(_session_key)"
   if [[ ! -f "${token_file}" ]]; then
     token=$(cat /proc/sys/kernel/random/uuid | tr -d '-')
     printf '%s' "${token}" > "${token_file}"
+    chmod 600 "${token_file}" 2>/dev/null || true
   else
     token=$(cat "${token_file}")
   fi
@@ -117,6 +123,14 @@ _run_action() {
       _header
       if [[ -f "${HISTORY_FILE}" ]]; then tail -10 "${HISTORY_FILE}"
       else printf 'no_history=1\n'; fi
+      ;;
+    get_config)
+      _header
+      for k in enabled randomize_imei randomize_bssid randomize_wan \
+               wipe_logs wipe_dhcp on_boot settle_delay \
+               cellular_timeout log_history; do
+        printf '%s=%s\n' "${k}" "$(uci -q get norypt.settings.${k} 2>/dev/null || echo '')"
+      done
       ;;
     *)
       printf 'Status: 400 Bad Request\r\nContent-Type: text/plain\r\n\r\nUnknown action\n'
