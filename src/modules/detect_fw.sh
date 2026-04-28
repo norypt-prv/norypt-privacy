@@ -19,8 +19,17 @@ else
 fi
 
 IF_WAN="${IF_WAN_OVERRIDE:-eth0}"
-IF_WWAN="${IF_WWAN_OVERRIDE:-wwan0}"
 IF_CDC="${IF_CDC_OVERRIDE:-/dev/cdc-wdm0}"
+
+_resolve_wwan() {
+  # PCIe MHI modems (GL-XE3000, EM060K): rmnet_mhi0
+  # QMI/MBIM modems (older Quectel/Sierra):  wwan0
+  for iface in rmnet_mhi0 wwan0 wwan1; do
+    ip link show "${iface}" >/dev/null 2>&1 && echo "${iface}" && return
+  done
+  echo "wwan0"
+}
+IF_WWAN="${IF_WWAN_OVERRIDE:-$(_resolve_wwan)}"
 
 _resolve_wifi_2g() {
   # MediaTek (GL-XE3000, MT7981): ra0  |  Qualcomm/ath9k: wlan0

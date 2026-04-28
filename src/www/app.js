@@ -71,7 +71,11 @@ async function loadConfig() {
       const v = cfg[toggle.dataset.cfg];
       if (v === '1' || v === '0') toggle.checked = v === '1';
     });
-  } catch (e) { /* keep default-checked state on failure */ }
+    document.querySelectorAll('[data-cfg-select]').forEach(sel => {
+      const v = cfg[sel.dataset.cfgSelect];
+      if (v) sel.value = v;
+    });
+  } catch (e) { /* keep default state on failure */ }
 }
 
 async function loadHistory() {
@@ -129,12 +133,23 @@ async function setConfig(key, val) {
   }
 }
 
+async function setConfigValue(key, val) {
+  try {
+    await api('set_config', key + '=' + encodeURIComponent(val));
+  } catch (e) {
+    alert(e.message);
+  }
+}
+
 function bindControls() {
   document.querySelectorAll('[data-action]').forEach(btn => {
     btn.addEventListener('click', () => triggerAction(btn.dataset.action, btn));
   });
   document.querySelectorAll('[data-cfg]').forEach(toggle => {
     toggle.addEventListener('change', () => setConfig(toggle.dataset.cfg, toggle.checked));
+  });
+  document.querySelectorAll('[data-cfg-select]').forEach(sel => {
+    sel.addEventListener('change', () => setConfigValue(sel.dataset.cfgSelect, sel.value));
   });
 }
 

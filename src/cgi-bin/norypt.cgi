@@ -113,8 +113,21 @@ _run_action() {
       case "${key}" in
         enabled|randomize_imei|randomize_bssid|randomize_wan|\
         wipe_logs|wipe_dhcp|on_boot|settle_delay|\
-        cellular_timeout|log_history) ;;
+        cellular_timeout|log_history|\
+        imei_brand|imei_region|imei_default_region) ;;
         *) printf 'error=invalid_key\n'; return ;;
+      esac
+      # Validate string-valued keys to a small allowlist (rest are numeric).
+      case "${key}" in
+        imei_brand)
+          case "${val}" in apple|samsung|xiaomi|motorola|all) ;;
+            *) printf 'error=invalid_value\n'; return ;; esac ;;
+        imei_region)
+          case "${val}" in auto|eu|na|asia|latam|global) ;;
+            *) printf 'error=invalid_value\n'; return ;; esac ;;
+        imei_default_region)
+          case "${val}" in eu|na|asia|latam|global) ;;
+            *) printf 'error=invalid_value\n'; return ;; esac ;;
       esac
       uci set "norypt.settings.${key}=${val}" && uci commit norypt
       printf 'ok=%s\n' "${key}"
@@ -128,7 +141,8 @@ _run_action() {
       _header
       for k in enabled randomize_imei randomize_bssid randomize_wan \
                wipe_logs wipe_dhcp on_boot settle_delay \
-               cellular_timeout log_history; do
+               cellular_timeout log_history \
+               imei_brand imei_region imei_default_region; do
         printf '%s=%s\n' "${k}" "$(uci -q get norypt.settings.${k} 2>/dev/null || echo '')"
       done
       ;;

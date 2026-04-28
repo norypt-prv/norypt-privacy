@@ -28,6 +28,11 @@ input:checked+.slider::before{transform:translateX(16px)}
 .btn-p{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600}
 .btn-p:hover{background:#79c0ff;border-color:#79c0ff;color:#000}
 .controls{display:flex;gap:8px;flex-wrap:wrap}
+.select-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);gap:12px}
+.select-row:last-child{border-bottom:none}
+.select-row label{color:var(--muted);font-size:12px;flex:1}
+.select-row select{background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-size:13px;font-family:inherit;min-width:180px}
+.select-row select:focus{outline:none;border-color:var(--accent)}
 .h-row{padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;font-family:monospace}
 .h-row:last-child{border-bottom:none}
 .h-time{color:var(--muted);margin-right:12px}

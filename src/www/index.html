@@ -38,6 +38,43 @@
   </div>
 
   <div class="card">
+    <div class="card-header">IMEI Selection</div>
+    <div class="card-body">
+      <div class="select-row">
+        <label for="sel-brand">Brand</label>
+        <select id="sel-brand" data-cfg-select="imei_brand">
+          <option value="all">All brands (mixed)</option>
+          <option value="apple">Apple</option>
+          <option value="samsung">Samsung</option>
+          <option value="xiaomi">Xiaomi</option>
+          <option value="motorola">Motorola</option>
+        </select>
+      </div>
+      <div class="select-row">
+        <label for="sel-region">Region</label>
+        <select id="sel-region" data-cfg-select="imei_region">
+          <option value="auto">Auto (from SIM IMSI MCC)</option>
+          <option value="eu">Europe</option>
+          <option value="na">North America</option>
+          <option value="asia">Asia / Oceania</option>
+          <option value="latam">Latin America</option>
+          <option value="global">Global pool only</option>
+        </select>
+      </div>
+      <div class="select-row">
+        <label for="sel-default-region">Fallback region</label>
+        <select id="sel-default-region" data-cfg-select="imei_default_region">
+          <option value="eu">Europe</option>
+          <option value="na">North America</option>
+          <option value="asia">Asia / Oceania</option>
+          <option value="latam">Latin America</option>
+          <option value="global">Global</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
     <div class="card-header">Manual Controls</div>
     <div class="card-body controls">
       <button class="btn" data-action="randomize_imei">&#8635; IMEI</button>
